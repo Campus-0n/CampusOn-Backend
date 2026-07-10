@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: campuson-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}   # 환경변수로 안 주면 기본은 dev
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    root: info
