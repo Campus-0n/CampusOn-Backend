@@ -4,17 +4,17 @@ services:
     container_name: campuson-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-campuson}
-      MYSQL_USER: ${DB_USERNAME:-campuson_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-campuson_pw}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root1234}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       TZ: Asia/Seoul
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-root1234}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -32,9 +32,9 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: ${DB_NAME:-campuson}
-      DB_USERNAME: ${DB_USERNAME:-campuson_user}
-      DB_PASSWORD: ${DB_PASSWORD:-campuson_pw}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
       SERVER_PORT: 8080
     ports:
       - "8080:8080"
