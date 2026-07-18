@@ -5,8 +5,8 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      # MYSQL_USER: ${DB_USERNAME}
+      # MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       TZ: Asia/Seoul
     ports:
@@ -29,13 +29,15 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: dev,security
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       SERVER_PORT: 8080
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MAIL_PASSWORD: ${MAIL_APP_PASSWORD}
     ports:
       - "8080:8080"
 
