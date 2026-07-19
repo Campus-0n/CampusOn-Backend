@@ -19,8 +19,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ResponseBody<Void>> businessException(BusinessException e) {
         ExceptionType exceptionType = e.getExceptionType();
+        String message = e.getCustomMessage() != null ? e.getCustomMessage() : exceptionType.getMessage();
         return ResponseEntity.status(exceptionType.getStatus())
-                .body(ResponseUtil.createFailureResponse(exceptionType));
+                .body(ResponseUtil.createFailureResponse(exceptionType, message));
 
     }
 

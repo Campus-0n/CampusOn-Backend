@@ -57,7 +57,12 @@ public enum ExceptionType {
     INVALID_TIME_RANGE(BAD_REQUEST, "R009", "시작시각이 종료시각보다 앞서야 합니다."),
     OUT_OF_OPERATING_HOURS(BAD_REQUEST, "R010", "운영시간(09:00~22:00) 내에서만 예약할 수 있습니다."),
     INVALID_RESERVATION_DURATION(BAD_REQUEST, "R011", "예약은 2시간 단위여야 합니다. (정시 시작, 예: 09:00~10:50)"),
-    INVALID_EXTENSION_UNIT(BAD_REQUEST, "R012", "연장은 1시간 단위로만 가능합니다.");
+    INVALID_EXTENSION_UNIT(BAD_REQUEST, "R012", "연장은 1시간 단위로만 가능합니다."),
+
+    // 체크인(QR + GPS 인증)
+    CHECKIN_TIME_WINDOW(CONFLICT, "R013", "체크인 가능 시간이 아닙니다."),
+    CHECKIN_INVALID_QR(CONFLICT, "R014", "예약한 강의실의 QR이 아닙니다."),
+    CHECKIN_OUT_OF_RANGE(CONFLICT, "R015", "강의실 반경 밖입니다.");
 
 
     // 앞으로 도메인이 생길 때마다 여기에 추가하면 됩니다.
