@@ -43,7 +43,21 @@ public enum ExceptionType {
 
     // Token
     REFRESH_TOKEN_NOT_EXIST(NOT_FOUND, "T001", "리프래시 토큰이 존재하지 않습니다"),
-    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다");
+    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다"),
+
+    // Reservation
+    RESERVATION_NOT_FOUND(NOT_FOUND, "R001", "예약을 찾을 수 없습니다."),
+    ROOM_NOT_FOUND(NOT_FOUND, "R002", "강의실을 찾을 수 없습니다."),
+    NOT_RESERVATION_OWNER(FORBIDDEN, "R003", "본인의 예약이 아닙니다."),
+    TIME_CONFLICT(CONFLICT, "R004", "해당 시간대에 이미 예약이 있습니다."),
+    INVALID_END_TIME(BAD_REQUEST, "R005", "종료시각은 정시 50분 단위여야 합니다."),
+    INVALID_HEADCOUNT(BAD_REQUEST, "R006", "이용 인원이 올바르지 않습니다."),
+    EXTENSION_LIMIT_EXCEEDED(CONFLICT, "R007", "연장 가능 횟수를 초과했습니다."),
+    INVALID_STATUS(CONFLICT, "R008", "현재 상태에서 할 수 없는 동작입니다."),
+    INVALID_TIME_RANGE(BAD_REQUEST, "R009", "시작시각이 종료시각보다 앞서야 합니다."),
+    OUT_OF_OPERATING_HOURS(BAD_REQUEST, "R010", "운영시간(09:00~22:00) 내에서만 예약할 수 있습니다."),
+    INVALID_RESERVATION_DURATION(BAD_REQUEST, "R011", "예약은 2시간 단위여야 합니다. (정시 시작, 예: 09:00~10:50)"),
+    INVALID_EXTENSION_UNIT(BAD_REQUEST, "R012", "연장은 1시간 단위로만 가능합니다.");
 
 
     // 앞으로 도메인이 생길 때마다 여기에 추가하면 됩니다.
