@@ -6,16 +6,17 @@ jwt:
 spring:
   mail:
     host: smtp.gmail.com
-    port: 587
+    port: 465
     username: ${MAIL_USERNAME}
     password: ${MAIL_APP_PASSWORD}   # 구글 "앱 비밀번호"
     properties:
       mail:
         smtp:
           auth: true
-          starttls:
+          ssl:
             enable: true
+            ssl: true
             required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
