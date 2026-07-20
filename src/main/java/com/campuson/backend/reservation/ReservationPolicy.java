@@ -15,6 +15,9 @@ public final class ReservationPolicy {
     /** 강의실에 반경 값이 없을 때 사용할 기본 체크인 허용 반경(m). */
     public static final double DEFAULT_CHECKIN_RADIUS_METERS = 50.0;
 
+    /** 이용 중(CHECKED_IN) 강의실 허용 반경 이탈이 이 시간(분) 이상 지속되면 예약 자동취소. */
+    public static final int CHECKIN_OUT_OF_RANGE_LIMIT_MINUTES = 10;
+
     /** 종료 후 다음 예약 제한(버퍼) 시간(분). 충돌검사에 포함. */
     public static final int END_BUFFER_MINUTES = 10;
 

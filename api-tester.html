@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusOn API 테스터</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0; --mut:#94a3b8; --pri:#38bdf8; --ok:#22c55e; --err:#f87171; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.5 system-ui,"Segoe UI",sans-serif; }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5; }
+  header h1 { margin:0 0 6px; font-size:18px; }
+  .cors { color:var(--mut); font-size:12px; }
+  .cors code { color:var(--pri); }
+  .wrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 20px; }
+  @media (max-width:900px){ .wrap{ grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:14px; }
+  .card h2 { margin:0 0 10px; font-size:14px; color:var(--pri); }
+  label { display:block; font-size:12px; color:var(--mut); margin:8px 0 3px; }
+  input, select { width:100%; padding:7px 9px; background:#0b1220; border:1px solid var(--line); border-radius:6px; color:var(--txt); }
+  .row { display:flex; gap:8px; } .row > div { flex:1; }
+  button { margin-top:10px; padding:8px 12px; background:var(--pri); color:#04283a; border:0; border-radius:6px; font-weight:600; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--pri); border:1px solid var(--line); }
+  button:hover { opacity:.9; }
+  #tokenStatus { font-size:12px; color:var(--ok); }
+  #log { background:#0b1220; border:1px solid var(--line); border-radius:8px; padding:12px; height:70vh; overflow:auto; white-space:pre-wrap; font:12px/1.5 ui-monospace,Consolas,monospace; }
+  .out h2 { position:sticky; top:0; }
+  .hint { font-size:11px; color:var(--mut); margin-top:4px; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>CampusOn API 테스터</h1>
+  <div class="cors">⚠️ CORS 때문에 <b>반드시 <code>http://localhost:5173</code> 로 열어야</b> 합니다. 이 파일이 있는 폴더에서:
+    <code>python -m http.server 5173</code> 실행 후 <code>http://localhost:5173/api-tester.html</code> 접속.
+    (백엔드 CORS 허용 origin = localhost:3000 / 5173)</div>
+  <div style="margin-top:8px" class="row">
+    <div><label>Base URL</label><input id="baseUrl" value="http://localhost:8080"></div>
+    <div><label>토큰 상태</label><div id="tokenStatus">로그인 필요</div></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>1. 로그인 (토큰 발급)</h2>
+      <div class="hint">메일 없이 테스트하려면 먼저 DB에 인증된 유저를 넣으세요 (POSTMAN_TESTING.md 1-B). 기본값: tester1 / test1234</div>
+      <div class="row">
+        <div><label>loginId</label><input id="loginId" value="tester1"></div>
+        <div><label>password</label><input id="password" value="test1234"></div>
+      </div>
+      <button onclick="login()">로그인</button>
+      <button class="ghost" onclick="logout()">로그아웃</button>
+    </div>
+
+    <div class="card">
+      <h2>📍 위치 조절 (체크인 GPS)</h2>
+      <div class="hint">파란 마커를 <b>드래그</b>하거나 지도를 <b>클릭</b>해 "내 위치"를 옮기세요. 이 좌표로 체크인됩니다. 빨간 원 = 강의실 허용 반경.</div>
+      <div id="map" style="height:260px;border-radius:8px;margin:8px 0;background:#0b1220"></div>
+      <div class="row">
+        <div><label>내 위도(lat)</label><input id="lat" value="36.14" oninput="syncMarkerFromInputs()"></div>
+        <div><label>내 경도(lng)</label><input id="lng" value="128.39" oninput="syncMarkerFromInputs()"></div>
+      </div>
+      <button class="ghost" onclick="useCurrentLocation()">📍 내 실제 위치 가져오기</button>
+      <hr style="border-color:var(--line);margin:12px 0">
+      <div class="hint">예약한 강의실 좌표·반경 (빨간 원). 넣으면 안/밖·거리를 미리 확인.</div>
+      <div class="row">
+        <div><label>강의실 위도</label><input id="roomLat" value="36.14" oninput="drawRoomCircle()"></div>
+        <div><label>강의실 경도</label><input id="roomLng" value="128.39" oninput="drawRoomCircle()"></div>
+        <div><label>반경(m)</label><input id="roomRadius" value="50" oninput="drawRoomCircle()"></div>
+      </div>
+      <div id="distInfo" class="hint" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>🛰️ 실시간 위치 전송 (이탈 자동취소 테스트)</h2>
+      <div class="hint">체크인(CHECKED_IN) 후 <b>전송 시작</b>을 누르면 지도의 "내 위치"를 주기적으로 서버에 보냅니다.
+        마커를 <b>빨간 원 밖으로</b> 빼고 유지하면 <b>자동취소까지 남은 초</b>가 카운트다운되고, 0이 되면 예약이 CANCELLED 돼요. (한계 현재 1분)</div>
+      <div class="row">
+        <div><label>예약 id (아래 3번의 값 사용)</label><input id="hbRid" value="1"></div>
+        <div><label>전송 주기(초)</label><input id="hbInterval" value="5"></div>
+      </div>
+      <button id="hbStartBtn" onclick="startHeartbeat()">전송 시작 ▶</button>
+      <button class="ghost" onclick="stopHeartbeat()">중지 ■</button>
+      <div id="hbStatus" class="hint" style="margin-top:8px">대기 중</div>
+    </div>
+
+    <div class="card">
+      <h2>2. 강의실 / 예약</h2>
+      <div class="row">
+        <div><label>roomId</label><input id="roomId" value="1"></div>
+        <div><label>date (yyyy-MM-dd)</label><input id="date" value="2026-07-25"></div>
+      </div>
+      <button class="ghost" onclick="availability()">가용 시간 조회 (GET)</button>
+      <div class="row">
+        <div><label>startTime</label><input id="startTime" value="09:00"></div>
+        <div><label>endTime</label><input id="endTime" value="10:50"></div>
+      </div>
+      <div class="row">
+        <div><label>purpose</label><input id="purpose" value="스터디"></div>
+        <div><label>headcount</label><input id="headcount" value="4"></div>
+      </div>
+      <button onclick="createReservation()">예약 생성 (POST)</button>
+      <button class="ghost" onclick="myReservations()">내 예약 목록</button>
+    </div>
+
+    <div class="card">
+      <h2>3. 상태 변경 (예약 id 기준)</h2>
+      <label>reservationId</label><input id="rid" value="1">
+      <button class="ghost" onclick="detail()">상세 조회</button>
+      <button class="ghost" onclick="cancel()">취소 (RESERVED만)</button>
+      <hr style="border-color:var(--line);margin:12px 0">
+      <div class="hint">체크인 전: 예약을 "지금·RESERVED"로 옮겨야 함(POSTMAN_TESTING.md 4-2의 UPDATE).</div>
+      <div class="row">
+        <div><label>qrToken</label><input id="qrToken" value="TESTQR123"></div>
+      </div>
+      <div class="hint">GPS(lat/lng)는 위쪽 <b>📍 위치 조절</b> 카드의 지도로 설정돼요.</div>
+      <button onclick="checkin()">체크인 (POST)</button>
+      <div class="row"><div><label>newEndTime (현재 종료+1시간)</label><input id="newEndTime" value="11:50"></div></div>
+      <button class="ghost" onclick="extend()">연장</button>
+      <button class="ghost" onclick="endRes()">종료</button>
+    </div>
+  </div>
+
+  <div class="card out">
+    <h2>응답 로그 <button class="ghost" style="float:right;margin:0;padding:3px 8px" onclick="document.getElementById('log').textContent=''">지우기</button></h2>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+  let token = null, refreshToken = null;
+  const v = id => document.getElementById(id).value.trim();
+  const baseUrl = () => v('baseUrl').replace(/\/$/, '');
+  const logEl = document.getElementById('log');
+  function log(s){ logEl.textContent += s + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+
+  async function call(method, path, body, useAuth){
+    const headers = {};
+    if (body) headers['Content-Type'] = 'application/json';
+    if (useAuth && token) headers['Authorization'] = 'Bearer ' + token;
+    log("▶ " + method + " " + path + (body ? "\n  " + JSON.stringify(body) : ""));
+    try {
+      const res = await fetch(baseUrl() + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      const text = await res.text();
+      let pretty = text; try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch(e){}
+      log("◀ " + res.status + " " + res.statusText + "\n" + pretty + "\n");
+      try { return { status: res.status, json: JSON.parse(text) }; } catch(e){ return { status: res.status, json: null }; }
+    } catch (e) {
+      log("✖ 요청 실패: " + e.message + "\n  (서버 미기동이거나 CORS. localhost:5173 에서 열었는지 확인)\n");
+      return null;
+    }
+  }
+  const auth = () => { if(!token){ log("⚠ 먼저 로그인하세요.\n"); return false; } return true; };
+
+  async function login(){
+    const r = await call('POST','/auth/user/login',{ loginId:v('loginId'), password:v('password') }, false);
+    const d = r && r.json && r.json.data;
+    if (d && d.accessToken){ token=d.accessToken; refreshToken=d.refreshToken;
+      document.getElementById('tokenStatus').textContent = "토큰 저장됨 ✓ ("+ (d.name||'') +")"; }
+  }
+  function logout(){ token=null; refreshToken=null; document.getElementById('tokenStatus').textContent="로그인 필요"; log("로그아웃(로컬 토큰 삭제)\n"); }
+
+  function availability(){ if(!auth())return; call('GET', `/api/rooms/${v('roomId')}/availability?date=${v('date')}`, null, true); }
+  function createReservation(){ if(!auth())return; call('POST','/api/reservations',{
+    roomId:Number(v('roomId')), reservationDate:v('date'), startTime:v('startTime'), endTime:v('endTime'),
+    purpose:v('purpose'), headcount:Number(v('headcount')) }, true); }
+  function myReservations(){ if(!auth())return; call('GET','/api/reservations/me?tab=UPCOMING', null, true); }
+  function detail(){ if(!auth())return; call('GET',`/api/reservations/${v('rid')}`, null, true); }
+  function cancel(){ if(!auth())return; call('PATCH',`/api/reservations/${v('rid')}/cancel`, null, true); }
+  function checkin(){ if(!auth())return; call('POST',`/api/reservations/${v('rid')}/check-in`,{
+    roomId:Number(v('roomId')), qrToken:v('qrToken'), latitude:Number(v('lat')), longitude:Number(v('lng')) }, true); }
+  function extend(){ if(!auth())return; call('PATCH',`/api/reservations/${v('rid')}/extend`,{ newEndTime:v('newEndTime') }, true); }
+  function endRes(){ if(!auth())return; call('PATCH',`/api/reservations/${v('rid')}/end`, null, true); }
+
+  /* ===== 위치 조절 (지도) ===== */
+  let map, meMarker, roomCircle;
+  function haversine(la1,lo1,la2,lo2){ const R=6371000, toR=x=>x*Math.PI/180;
+    const dLat=toR(la2-la1), dLon=toR(lo2-lo1);
+    const a=Math.sin(dLat/2)**2 + Math.cos(toR(la1))*Math.cos(toR(la2))*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
+  function updateDist(){
+    const d=haversine(Number(v('lat')),Number(v('lng')),Number(v('roomLat')),Number(v('roomLng')));
+    const rad=Number(v('roomRadius')); const el=document.getElementById('distInfo');
+    if(el) el.innerHTML = "강의실까지 거리: <b>"+d.toFixed(1)+"m</b> — " +
+      (d<=rad ? '<span style="color:var(--ok)">반경 안 ✓ 체크인 가능</span>'
+              : '<span style="color:var(--err)">반경 밖 ✗ (R015)</span>'); }
+  function setLatLng(lat,lng){ document.getElementById('lat').value=lat.toFixed(6);
+    document.getElementById('lng').value=lng.toFixed(6); updateDist(); }
+  function syncMarkerFromInputs(){ if(meMarker){ const p=[Number(v('lat')),Number(v('lng'))];
+    meMarker.setLatLng(p); if(map) map.panTo(p); } updateDist(); }
+  function drawRoomCircle(){ if(map){ const c=[Number(v('roomLat')),Number(v('roomLng'))], rad=Number(v('roomRadius'));
+    if(roomCircle) map.removeLayer(roomCircle);
+    roomCircle=L.circle(c,{radius:rad,color:'#f87171',fillColor:'#f87171',fillOpacity:.15}).addTo(map);} updateDist(); }
+  function useCurrentLocation(){ if(!navigator.geolocation){ log('이 브라우저는 위치를 지원하지 않아요\n'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos=>{ setLatLng(pos.coords.latitude,pos.coords.longitude);
+        if(meMarker){ meMarker.setLatLng([pos.coords.latitude,pos.coords.longitude]); if(map) map.setView([pos.coords.latitude,pos.coords.longitude],17);} },
+      err=> log('위치 가져오기 실패: '+err.message+'\n')); }
+  function initMap(){
+    if (typeof L === 'undefined'){ document.getElementById('map').innerHTML =
+      '<div style="padding:20px;color:var(--mut)">지도 로드 실패(인터넷 필요). 아래 위도/경도를 직접 입력해도 됩니다.</div>';
+      updateDist(); return; }
+    const lat=Number(v('lat')), lng=Number(v('lng'));
+    map=L.map('map').setView([lat,lng],17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    meMarker=L.marker([lat,lng],{draggable:true}).addTo(map).bindTooltip('내 위치',{permanent:false});
+    meMarker.on('drag', e=>{ const p=e.target.getLatLng(); setLatLng(p.lat,p.lng); });
+    map.on('click', e=>{ meMarker.setLatLng(e.latlng); setLatLng(e.latlng.lat,e.latlng.lng); });
+    drawRoomCircle();
+    setTimeout(()=>map.invalidateSize(), 250);
+  }
+  initMap();
+
+  /* ===== 실시간 위치 전송 (하트비트) ===== */
+  let hbTimer = null;
+  async function hbTick(){
+    const r = await call('POST', `/api/reservations/${v('hbRid')}/location`,
+      { latitude:Number(v('lat')), longitude:Number(v('lng')) }, true);
+    const d = r && r.json && r.json.data;
+    const el = document.getElementById('hbStatus');
+    if (r && r.json && r.json.success === "false"){ el.innerHTML = '<span style="color:var(--err)">오류: '+(r.json.code||'')+' '+(r.json.msg||'')+'</span> (체크인 상태인지 확인)'; return; }
+    if (!d) return;
+    const dist = (typeof d.distanceMeters==='number') ? d.distanceMeters.toFixed(1) : d.distanceMeters;
+    el.innerHTML = "상태: <b>"+d.status+"</b> · " +
+      (d.inRange ? '<span style="color:var(--ok)">반경 안 ✓</span>' : '<span style="color:var(--err)">반경 밖 ✗</span>') +
+      " · 거리 "+dist+"m" +
+      (d.secondsUntilAutoCancel!=null ? ' · <b style="color:var(--err)">자동취소까지 '+d.secondsUntilAutoCancel+'초</b>' : '');
+    if (d.autoCancelled || d.status === 'CANCELLED'){ el.innerHTML += ' — <b style="color:var(--err)">⛔ 자동취소됨!</b>'; stopHeartbeat(); }
+  }
+  function startHeartbeat(){
+    if(!auth()) return;
+    stopHeartbeat();
+    const sec = Math.max(1, Number(v('hbInterval'))||5);
+    document.getElementById('hbStartBtn').textContent = '전송 중… ●';
+    hbTick();
+    hbTimer = setInterval(hbTick, sec*1000);
+  }
+  function stopHeartbeat(){
+    if(hbTimer){ clearInterval(hbTimer); hbTimer=null; }
+    document.getElementById('hbStartBtn').textContent = '전송 시작 ▶';
+  }
+</script>
+</body>
+</html>

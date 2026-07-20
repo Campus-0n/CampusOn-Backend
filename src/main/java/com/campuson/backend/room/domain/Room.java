@@ -23,6 +23,14 @@ public class Room {
     @JoinColumn(name = "building_id", nullable = false)
     private Building building;
 
+    /** 소속 거점(빌딩 내 위치점). 체크인 GPS 판정은 이 거점 좌표를 기준으로 한다. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spot_id")
+    private Spot spot;
+
+    /** 강의실 QR 인증 토큰(체크인용). */
+    private String qrToken;
+
     @Column(nullable = false)
     private int floor;
 
@@ -42,8 +50,11 @@ public class Room {
     private Set<Facility> facilities = new HashSet<>();
 
     @Builder
-    public Room(Building building, int floor, String roomNumber, int capacity, String usageRule, Set<Facility> facilities) {
+    public Room(Building building, Spot spot, String qrToken, int floor, String roomNumber,
+                int capacity, String usageRule, Set<Facility> facilities) {
         this.building = building;
+        this.spot = spot;
+        this.qrToken = qrToken;
         this.floor = floor;
         this.roomNumber = roomNumber;
         this.capacity = capacity;
