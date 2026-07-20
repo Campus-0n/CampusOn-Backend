@@ -28,6 +28,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      TZ: Asia/Seoul                # 앱(JVM) 시간대를 KST로 → 체크인 시간창·스케줄러 정확
       SPRING_PROFILES_ACTIVE: dev,security
       DB_HOST: mysql
       DB_PORT: 3306
