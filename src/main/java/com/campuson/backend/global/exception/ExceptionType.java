@@ -43,8 +43,12 @@ public enum ExceptionType {
 
     // Token
     REFRESH_TOKEN_NOT_EXIST(NOT_FOUND, "T001", "리프래시 토큰이 존재하지 않습니다"),
-    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다");
+    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다"),
 
+    // Room
+    ROOM_NOT_FOUND(NOT_FOUND, "R001", "존재하지 않는 강의실입니다."),
+    NO_AVAILABLE_ROOM(NOT_FOUND, "R002", "현재 이용 가능한 강의실이 없습니다."),
+    OUT_OF_OPERATING_HOURS(BAD_REQUEST, "R003", "운영시간 외 시간입니다.");
 
     // 앞으로 도메인이 생길 때마다 여기에 추가하면 됩니다.
     // 예: MEMBER_NOT_FOUND(NOT_FOUND, "M001", "존재하지 않는 회원입니다.")

@@ -12,3 +12,7 @@ server:
 logging:
   level:
     root: info
+
+app:
+  seed-data:
+    enabled: true
