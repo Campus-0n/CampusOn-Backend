@@ -43,8 +43,11 @@ public class SecurityConfig {
                                 "/auth/user/verify-email",
                                 "/auth/user/login",
                                 "/auth/token/refresh",
+                                "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/api/rooms/**",
+                                "/api/map/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

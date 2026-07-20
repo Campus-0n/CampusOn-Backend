@@ -43,8 +43,24 @@ public enum ExceptionType {
 
     // Token
     REFRESH_TOKEN_NOT_EXIST(NOT_FOUND, "T001", "리프래시 토큰이 존재하지 않습니다"),
-    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다");
+    TOKEN_NOT_MATCHED(UNAUTHORIZED, "T002","일치하지 않는 토큰입니다"),
 
+    // Reservation
+    RESERVATION_NOT_FOUND(NOT_FOUND, "RS001", "예약을 찾을 수 없습니다."),
+    NOT_RESERVATION_OWNER(FORBIDDEN, "RS003", "본인의 예약이 아닙니다."),
+    TIME_CONFLICT(CONFLICT, "RS004", "해당 시간대에 이미 예약이 있습니다."),
+    INVALID_END_TIME(BAD_REQUEST, "RS005", "종료시각은 정시 50분 단위여야 합니다."),
+    INVALID_HEADCOUNT(BAD_REQUEST, "RS006", "이용 인원이 올바르지 않습니다."),
+    EXTENSION_LIMIT_EXCEEDED(CONFLICT, "RS007", "연장 가능 횟수를 초과했습니다."),
+    INVALID_STATUS(CONFLICT, "RS008", "현재 상태에서 할 수 없는 동작입니다."),
+    INVALID_TIME_RANGE(BAD_REQUEST, "RS009", "시작시각이 종료시각보다 앞서야 합니다."),
+    INVALID_RESERVATION_DURATION(BAD_REQUEST, "RS011", "예약은 2시간 단위여야 합니다. (정시 시작, 예: 09:00~10:50)"),
+    INVALID_EXTENSION_UNIT(BAD_REQUEST, "RS012", "연장은 1시간 단위로만 가능합니다."),
+
+    // Room
+    ROOM_NOT_FOUND(NOT_FOUND, "RM001", "존재하지 않는 강의실입니다."),
+    NO_AVAILABLE_ROOM(NOT_FOUND, "RM002", "현재 이용 가능한 강의실이 없습니다."),
+    OUT_OF_OPERATING_HOURS(BAD_REQUEST, "RM003", "운영시간 외 시간입니다.");
 
     // 앞으로 도메인이 생길 때마다 여기에 추가하면 됩니다.
     // 예: MEMBER_NOT_FOUND(NOT_FOUND, "M001", "존재하지 않는 회원입니다.")
