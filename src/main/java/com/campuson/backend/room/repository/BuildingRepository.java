@@ -1,0 +1,6 @@
+package com.campuson.backend.room.repository;
+
+import com.campuson.backend.room.domain.Building;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BuildingRepository extends JpaRepository<Building, Long> {}
