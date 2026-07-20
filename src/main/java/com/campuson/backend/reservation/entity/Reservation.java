@@ -4,7 +4,7 @@ import com.campuson.backend.global.base.BaseEntity;
 import com.campuson.backend.global.exception.BusinessException;
 import com.campuson.backend.global.exception.ExceptionType;
 import com.campuson.backend.reservation.ReservationPolicy;
-import com.campuson.backend.room.entity.Room;
+import com.campuson.backend.room.domain.Room;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

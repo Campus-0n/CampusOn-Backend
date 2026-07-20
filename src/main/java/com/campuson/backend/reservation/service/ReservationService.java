@@ -15,7 +15,7 @@ import com.campuson.backend.reservation.entity.Reservation;
 import com.campuson.backend.reservation.entity.ReservationStatus;
 import com.campuson.backend.reservation.entity.ReservationTab;
 import com.campuson.backend.reservation.repository.ReservationRepository;
-import com.campuson.backend.room.entity.Room;
+import com.campuson.backend.room.domain.Room;
 import com.campuson.backend.room.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -126,8 +126,8 @@ public class ReservationService {
         return new ReservationSummaryResponse(
                 r.getId(),
                 room.displayName(),
-                room.getBuilding(),
-                room.getFloor(),
+                room.getBuilding().getName(),
+                room.getFloor()+"층",
                 r.getReservationDate(),
                 r.getStartTime(),
                 r.getEndTime(),

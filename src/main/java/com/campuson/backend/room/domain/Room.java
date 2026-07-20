@@ -50,6 +50,11 @@ public class Room {
         this.usageRule = usageRule;
         this.facilities = facilities != null ? facilities : new HashSet<>();
     }
+
+    public String displayName() {
+        return building.getName() + " " + roomNumber; // 예: "IT융합관 301호"
+    }
+
 }
 /**
  * [스텁] 강의실 엔티티.
