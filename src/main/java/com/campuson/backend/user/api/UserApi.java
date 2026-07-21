@@ -27,8 +27,10 @@ public interface UserApi {
     @PostMapping("/signup")
     ResponseEntity<ResponseBody<Void>> signup(@RequestBody @Valid SignupRequest request);
 
+    /**
     @PostMapping("/verify-email")
     ResponseEntity<ResponseBody<Void>> verifyEmail(@RequestBody @Valid VerifyEmailRequest request);
+    */
 
     @PostMapping("/login")
     ResponseEntity<ResponseBody<LoginResponse>> login(@RequestBody @Valid LoginRequest request);

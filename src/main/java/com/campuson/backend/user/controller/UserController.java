@@ -36,11 +36,13 @@ public class UserController implements UserApi {
         return ResponseEntity.ok(createSuccessResponse());
     }
 
+    /**
     @PostMapping("/verify-email")
     public ResponseEntity<ResponseBody<Void>> verifyEmail(@RequestBody @Valid VerifyEmailRequest request) {
         userService.verifyEmail(request);
         return ResponseEntity.ok(createSuccessResponse());
     }
+     */
 
     @PostMapping("/login")
     public ResponseEntity<ResponseBody<LoginResponse>> login(@RequestBody @Valid LoginRequest request) {

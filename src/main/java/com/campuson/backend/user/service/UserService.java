@@ -29,14 +29,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ConfirmationTokenService confirmationTokenService;
-    private final JavaMailSender mailSender;
+    //private final ConfirmationTokenService confirmationTokenService;
+    //private final JavaMailSender mailSender;
     private final JwtHandler jwtHandler;
 
     @Transactional(rollbackFor = Exception.class)
     public void signup(SignupRequest request) {
         validateEmailDomain(request.email());
 
+        /**
         Optional<User> existing = userRepository.findByEmail(request.email());
         if (existing.isPresent()) {
             if (existing.get().isEmailVerified()) {
@@ -45,7 +46,11 @@ public class UserService {
             resendVerification(existing.get()); // 인증 전 상태면 코드만 재발급
             return;
         }
+        */
 
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException(ExceptionType.DUPLICATE_EMAIL);
+        }
         if (userRepository.existsByLoginId(request.loginId())) {
             throw new BusinessException(ExceptionType.DUPLICATE_LOGIN_ID);
         }
@@ -57,15 +62,18 @@ public class UserService {
                 .name(request.name())
                 .role(UserRole.USER)
                 .build();
+        user.markEmailVerified();
         userRepository.save(user);
 
-        resendVerification(user);
+        //resendVerification(user);
     }
 
+    /**
     private void resendVerification(User user) {
         String code = confirmationTokenService.issue(user.getId());
         sendVerificationEmail(user.getEmail(), code);
     }
+     */
 
     private void validateEmailDomain(String email) {
         if (!email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN)) {
@@ -73,6 +81,7 @@ public class UserService {
         }
     }
 
+    /**
     @Transactional
     public void verifyEmail(VerifyEmailRequest request) {
         User user = userRepository.findByEmail(request.email())
@@ -81,6 +90,7 @@ public class UserService {
         confirmationTokenService.confirm(user.getId(), request.code());
         user.markEmailVerified();
     }
+    */
 
     @Transactional
     public User login(LoginRequest request) {
@@ -90,12 +100,15 @@ public class UserService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BusinessException(ExceptionType.INVALID_LOGIN);
         }
+        /**
         if (!user.isEmailVerified()) {
             throw new BusinessException(ExceptionType.EMAIL_NOT_VERIFIED);
         }
+        */
         return user;
     }
 
+    /**
     private void sendVerificationEmail(String toEmail, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
@@ -103,6 +116,7 @@ public class UserService {
         message.setText("인증 코드: " + code + "\n5분 이내에 입력해주세요.");
         mailSender.send(message);
     }
+    */
 
     @Transactional(readOnly = true)
     public boolean isAdmin(Long userId) {
