@@ -11,8 +11,9 @@ import java.util.List;
 public class CorsConfig {
     public static CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // TODO: 프론트엔드 개발 서버 주소로 교체필요 (예: Vite=5173, CRA=3000)
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        // localhost의 모든 포트 허용 (개발 편의). allowCredentials(true)와 함께 쓰려면
+        // setAllowedOrigins("*")는 불가하므로 setAllowedOriginPatterns 로 와일드카드 사용.
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setMaxAge(3600L);

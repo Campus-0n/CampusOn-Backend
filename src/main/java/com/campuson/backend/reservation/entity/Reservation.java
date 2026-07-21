@@ -117,6 +117,17 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.CANCELLED;
     }
 
+    /**
+     * 이용 중(CHECKED_IN) 사용자가 강의실 허용 반경을 장시간 이탈 → 예약 자동취소.
+     * (기능③ 위치추적에서 사용. 상태값은 사용자 직접취소와 동일하게 CANCELLED.)
+     */
+    public void cancelByLeaving() {
+        if (this.status != ReservationStatus.CHECKED_IN) {
+            throw new BusinessException(ExceptionType.INVALID_STATUS);
+        }
+        this.status = ReservationStatus.CANCELLED;
+    }
+
     /** 이용중 예약을 사용자가 직접 종료. */
     public void end() {
         if (this.status != ReservationStatus.CHECKED_IN) {

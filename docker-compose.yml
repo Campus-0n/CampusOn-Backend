@@ -5,8 +5,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      # 앱이 root 계정으로 접속하므로 MYSQL_USER는 설정하지 않음 (root는 예약어라 MYSQL_USER로 생성 불가)
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       TZ: Asia/Seoul
     ports:
@@ -29,6 +28,7 @@ services:
       mysql:
         condition: service_healthy
     environment:
+      TZ: Asia/Seoul                # 앱(JVM) 시간대를 KST로 → 체크인 시간창·스케줄러 정확
       SPRING_PROFILES_ACTIVE: dev,security
       DB_HOST: mysql
       DB_PORT: 3306

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusON 체크인/위치추적 테스트</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --text:#e2e8f0; --muted:#94a3b8;
+          --accent:#38bdf8; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; padding:20px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1000px; }
+  @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .card h2 { font-size:14px; margin:0 0 12px; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input { width:100%; padding:8px 10px; background:#0f172a; border:1px solid var(--line);
+          border-radius:7px; color:var(--text); font-size:13px; }
+  .row { display:flex; gap:8px; } .row > div { flex:1; }
+  button { padding:9px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600;
+           cursor:pointer; margin:6px 6px 0 0; }
+  .btn-primary { background:var(--accent); color:#0f172a; }
+  .btn-ok { background:var(--ok); color:#0f172a; }
+  .btn-warn { background:var(--warn); color:#0f172a; }
+  .btn-ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .loc { font-variant-numeric:tabular-nums; font-size:15px; }
+  .loc b { color:var(--accent); }
+  .status { display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+  .s-ok { background:rgba(34,197,94,.15); color:var(--ok); }
+  .s-bad { background:rgba(239,68,68,.15); color:var(--bad); }
+  .s-idle { background:rgba(148,163,184,.15); color:var(--muted); }
+  #log { background:#0b1120; border:1px solid var(--line); border-radius:8px; padding:10px;
+         height:280px; overflow-y:auto; font-family:ui-monospace,monospace; font-size:12px; white-space:pre-wrap; }
+  .log-req { color:var(--accent); } .log-ok { color:var(--ok); } .log-err { color:var(--bad); } .log-info { color:var(--muted); }
+  .big { font-size:26px; font-weight:700; }
+  .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+</style>
+</head>
+<body>
+  <h1>CampusON 체크인 / 위치추적 테스트</h1>
+  <div class="sub">브라우저 GPS(navigator.geolocation)로 실시간 위치를 받아 백엔드 체크인·하트비트 API를 호출합니다. 백엔드 테스트 및 프론트 연동 참고용.</div>
+
+  <div class="grid">
+    <!-- 설정 -->
+    <div class="card">
+      <h2>① 설정</h2>
+      <label>API Base URL</label>
+      <input id="baseUrl" value="http://localhost:8080">
+      <label>JWT 토큰 (Bearer)</label>
+      <input id="token" placeholder="로그인 후 받은 accessToken">
+      <div class="row">
+        <div><label>예약 ID</label><input id="reservationId" placeholder="예: 1"></div>
+        <div><label>강의실 ID (roomId)</label><input id="roomId" placeholder="예: 1"></div>
+      </div>
+      <label>QR 토큰</label>
+      <input id="qrToken" placeholder="예: QR-B1-101">
+      <label>하트비트 주기(초)</label>
+      <input id="interval" type="number" value="30" min="5">
+      <div class="hint">시더 QR 형식: QR-B1-101 ~ QR-B3-502 / 반경 50m</div>
+    </div>
+
+    <!-- 실시간 위치 -->
+    <div class="card">
+      <h2>② 실시간 위치</h2>
+      <div class="loc">위도: <b id="lat">-</b></div>
+      <div class="loc">경도: <b id="lng">-</b></div>
+      <div class="loc">정확도: <b id="acc">-</b> m</div>
+      <div class="loc" style="margin-top:6px">갱신: <span id="updated" class="log-info">-</span></div>
+      <div style="margin-top:12px">
+        <button class="btn-primary" id="startGps">위치 추적 시작</button>
+        <button class="btn-ghost" id="stopGps" disabled>중지</button>
+      </div>
+      <div class="hint">HTTPS 또는 localhost에서만 GPS 권한이 허용됩니다.</div>
+    </div>
+
+    <!-- 동작 -->
+    <div class="card">
+      <h2>③ 체크인 &amp; 하트비트</h2>
+      <button class="btn-ok" id="checkInBtn" disabled>체크인 (POST /check-in)</button>
+      <button class="btn-warn" id="hbStart" disabled>하트비트 자동전송 시작</button>
+      <button class="btn-ghost" id="hbStop" disabled>하트비트 중지</button>
+      <button class="btn-ghost" id="hbOnce" disabled>위치 1회 전송</button>
+      <div style="margin-top:16px">
+        <span id="rangeStatus" class="status s-idle">대기 중</span>
+      </div>
+      <div style="margin-top:10px">
+        거리 <span class="big" id="distance">-</span> m
+      </div>
+      <div class="loc" style="margin-top:4px">자동취소까지: <b id="countdown">-</b></div>
+      <div class="loc">예약 상태: <b id="resStatus">-</b></div>
+    </div>
+
+    <!-- 로그 -->
+    <div class="card">
+      <h2>④ 로그</h2>
+      <div id="log"></div>
+      <button class="btn-ghost" id="clearLog" style="margin-top:8px">지우기</button>
+    </div>
+  </div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let watchId = null, hbTimer = null, coords = null;
+
+  function log(msg, cls='log-info') {
+    const el = $('log');
+    const t = new Date().toLocaleTimeString();
+    el.innerHTML += `<span class="${cls}">[${t}] ${msg}</span>\n`;
+    el.scrollTop = el.scrollHeight;
+  }
+  $('clearLog').onclick = () => $('log').innerHTML = '';
+
+  // ---- 실시간 위치 (프론트 담당 영역) ----
+  $('startGps').onclick = () => {
+    if (!navigator.geolocation) { log('이 브라우저는 Geolocation 미지원', 'log-err'); return; }
+    watchId = navigator.geolocation.watchPosition(onPos, onPosErr,
+      { enableHighAccuracy:true, maximumAge:2000, timeout:10000 });
+    $('startGps').disabled = true; $('stopGps').disabled = false;
+    ['checkInBtn','hbStart','hbOnce'].forEach(b => $(b).disabled = false);
+    log('위치 추적 시작 (watchPosition)', 'log-req');
+  };
+  $('stopGps').onclick = () => {
+    if (watchId != null) navigator.geolocation.clearWatch(watchId);
+    watchId = null; stopHeartbeat();
+    $('startGps').disabled = false; $('stopGps').disabled = true;
+    ['checkInBtn','hbStart','hbStop','hbOnce'].forEach(b => $(b).disabled = true);
+    log('위치 추적 중지', 'log-info');
+  };
+  function onPos(p) {
+    coords = { latitude:p.coords.latitude, longitude:p.coords.longitude };
+    $('lat').textContent = p.coords.latitude.toFixed(6);
+    $('lng').textContent = p.coords.longitude.toFixed(6);
+    $('acc').textContent = Math.round(p.coords.accuracy);
+    $('updated').textContent = new Date().toLocaleTimeString();
+  }
+  function onPosErr(e) { log('위치 오류: ' + e.message, 'log-err'); }
+
+  // ---- API 호출 ----
+  function cfg() {
+    return {
+      base: $('baseUrl').value.replace(/\/$/, ''),
+      token: $('token').value.trim(),
+      resId: $('reservationId').value.trim(),
+      roomId: $('roomId').value.trim(),
+      qrToken: $('qrToken').value.trim(),
+    };
+  }
+  async function post(path, body) {
+    const c = cfg();
+    const url = c.base + path;
+    log('POST ' + path + ' ' + JSON.stringify(body), 'log-req');
+    const res = await fetch(url, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + c.token },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let json; try { json = JSON.parse(text); } catch { json = text; }
+    if (res.ok) log('← ' + res.status + ' ' + JSON.stringify(json), 'log-ok');
+    else log('← ' + res.status + ' ' + JSON.stringify(json), 'log-err');
+    return { ok:res.ok, json };
+  }
+  // ResponseBody 래퍼가 있어도 실제 데이터만 뽑기
+  function unwrap(json) {
+    if (json && typeof json === 'object') return json.data ?? json.result ?? json.body ?? json;
+    return json;
+  }
+
+  // ---- 체크인 ----
+  $('checkInBtn').onclick = async () => {
+    if (!coords) { log('위치 없음. 먼저 위치 추적을 시작하세요.', 'log-err'); return; }
+    const c = cfg();
+    if (!c.resId || !c.roomId || !c.qrToken) { log('예약ID/강의실ID/QR토큰을 입력하세요.', 'log-err'); return; }
+    await post(`/api/reservations/${c.resId}/check-in`, {
+      roomId: Number(c.roomId), qrToken: c.qrToken,
+      latitude: coords.latitude, longitude: coords.longitude,
+    });
+  };
+
+  // ---- 하트비트 ----
+  async function sendLocation() {
+    if (!coords) { log('위치 없음, 전송 건너뜀', 'log-info'); return; }
+    const c = cfg();
+    if (!c.resId) { log('예약ID를 입력하세요.', 'log-err'); return; }
+    const { ok, json } = await post(`/api/reservations/${c.resId}/location`, {
+      latitude: coords.latitude, longitude: coords.longitude,
+    });
+    if (!ok) return;
+    const d = unwrap(json);
+    if (d && typeof d === 'object' && 'inRange' in d) {
+      $('distance').textContent = d.distanceMeters ?? '-';
+      $('resStatus').textContent = d.status ?? '-';
+      const st = $('rangeStatus');
+      if (d.autoCancelled) {
+        st.className = 'status s-bad'; st.textContent = '자동취소됨 (이탈 지속)';
+        $('countdown').textContent = '취소 완료';
+        stopHeartbeat();
+        log('예약이 자동취소되었습니다.', 'log-err');
+      } else if (d.inRange) {
+        st.className = 'status s-ok'; st.textContent = '반경 안 (정상)';
+        $('countdown').textContent = '-';
+      } else {
+        st.className = 'status s-bad'; st.textContent = '반경 밖!';
+        const s = d.secondsUntilAutoCancel;
+        $('countdown').textContent = (s != null) ? `${Math.floor(s/60)}분 ${s%60}초` : '-';
+      }
+    }
+  }
+  $('hbOnce').onclick = sendLocation;
+  $('hbStart').onclick = () => {
+    const sec = Math.max(5, Number($('interval').value) || 30);
+    stopHeartbeat();
+    sendLocation();
+    hbTimer = setInterval(sendLocation, sec * 1000);
+    $('hbStart').disabled = true; $('hbStop').disabled = false;
+    log(`하트비트 자동전송 시작 (${sec}초 주기)`, 'log-req');
+  };
+  $('hbStop').onclick = stopHeartbeat;
+  function stopHeartbeat() {
+    if (hbTimer) { clearInterval(hbTimer); hbTimer = null; log('하트비트 중지', 'log-info'); }
+    $('hbStart').disabled = (watchId == null); $('hbStop').disabled = true;
+  }
+</script>
+</body>
+</html>

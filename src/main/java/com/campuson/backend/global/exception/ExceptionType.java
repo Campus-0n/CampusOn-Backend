@@ -57,6 +57,11 @@ public enum ExceptionType {
     INVALID_RESERVATION_DURATION(BAD_REQUEST, "RS011", "예약은 2시간 단위여야 합니다. (정시 시작, 예: 09:00~10:50)"),
     INVALID_EXTENSION_UNIT(BAD_REQUEST, "RS012", "연장은 1시간 단위로만 가능합니다."),
 
+    // 체크인(QR + GPS 인증)
+    CHECKIN_TIME_WINDOW(CONFLICT, "RS013", "체크인 가능 시간이 아닙니다."),
+    CHECKIN_INVALID_QR(CONFLICT, "RS014", "예약한 강의실의 QR이 아닙니다."),
+    CHECKIN_OUT_OF_RANGE(CONFLICT, "RS015", "강의실 반경 밖입니다."),
+
     // Room
     ROOM_NOT_FOUND(NOT_FOUND, "RM001", "존재하지 않는 강의실입니다."),
     NO_AVAILABLE_ROOM(NOT_FOUND, "RM002", "현재 이용 가능한 강의실이 없습니다."),

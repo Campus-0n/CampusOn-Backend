@@ -1,5 +1,6 @@
 package com.campuson.backend.reservation;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -10,6 +11,12 @@ public final class ReservationPolicy {
 
     private ReservationPolicy() {
     }
+
+    /** 강의실에 반경 값이 없을 때 사용할 기본 체크인 허용 반경(m). */
+    public static final double DEFAULT_CHECKIN_RADIUS_METERS = 50.0;
+
+    /** 이용 중(CHECKED_IN) 강의실 허용 반경 이탈이 이 시간(분) 이상 지속되면 예약 자동취소. */
+    public static final int CHECKIN_OUT_OF_RANGE_LIMIT_MINUTES = 10;
 
     /** 종료 후 다음 예약 제한(버퍼) 시간(분). 충돌검사에 포함. */
     public static final int END_BUFFER_MINUTES = 10;
@@ -65,5 +72,16 @@ public final class ReservationPolicy {
     /** 연장 후 종료시각이 1시간 단위(현재 종료 + EXTENSION_UNIT_HOURS)인지. */
     public static boolean isValidExtension(LocalTime currentEnd, LocalTime newEnd) {
         return newEnd.equals(currentEnd.plusHours(EXTENSION_UNIT_HOURS));
+    }
+
+    /**
+     * 체크인 가능 시간창 안인지.
+     * 허용 구간: [시작 - CHECKIN_PRE_ALLOW_MINUTES, 시작 + CHECKIN_GRACE_MINUTES]
+     * (유예를 넘기면 스케줄러가 NO_SHOW 로 전환한다.)
+     */
+    public static boolean isWithinCheckInWindow(LocalDateTime start, LocalDateTime now) {
+        LocalDateTime open = start.minusMinutes(CHECKIN_PRE_ALLOW_MINUTES);
+        LocalDateTime close = start.plusMinutes(CHECKIN_GRACE_MINUTES);
+        return !now.isBefore(open) && !now.isAfter(close);
     }
 }
