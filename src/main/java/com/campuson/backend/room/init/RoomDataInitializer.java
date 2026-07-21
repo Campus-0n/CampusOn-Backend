@@ -50,14 +50,14 @@ public class RoomDataInitializer implements ApplicationRunner {
             new BuildingSeed("디지털관")   // 신규 건물
     );
 
-    // 거점(빌딩 내 위치점) — 기존 3건물은 각 1거점(옛 건물 좌표), 디지털관은 지도 좌표 3개로 3거점
+    // 거점(빌딩 내 위치점) — 기존 3건물은 각 1거점(옛 건물 좌표), 디지털관은 지도 좌표 2개로 2거점
+    // (강의실이 없던 옛 거점1 삭제 후, 옛 거점2·3을 거점1·2로 재편)
     private static final List<SpotSeed> SPOT_SEEDS = List.of(
             new SpotSeed("IT융합관", "IT",  "IT융합관 거점",  36.1462,    128.3945),
             new SpotSeed("학생회관", "SH",  "학생회관 거점",  36.1470,    128.3950),
             new SpotSeed("도서관",   "LIB", "도서관 거점",    36.1455,    128.3938),
-            new SpotSeed("디지털관", "D1",  "디지털관 거점1", 36.146088,  128.392359),
-            new SpotSeed("디지털관", "D2",  "디지털관 거점2", 36.145912,  128.392797),
-            new SpotSeed("디지털관", "D3",  "디지털관 거점3", 36.145588,  128.392484)
+            new SpotSeed("디지털관", "D1",  "디지털관 거점1", 36.145912,  128.392797),
+            new SpotSeed("디지털관", "D2",  "디지털관 거점2", 36.145588,  128.392484)
     );
 
     // 기존 강의실 — 각 건물의 단일 거점에 배속
@@ -81,18 +81,36 @@ public class RoomDataInitializer implements ApplicationRunner {
             new RoomSeed("LIB", 1, "스터디룸3", 8, EnumSet.of(Facility.WHITEBOARD, Facility.WIFI, Facility.OUTLET, Facility.HDMI)),
             new RoomSeed("LIB", 2, "세미나실1", 12, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.OUTLET, Facility.HDMI)),
             new RoomSeed("LIB", 2, "세미나실2", 12, EnumSet.of(Facility.PROJECTOR, Facility.WHITEBOARD, Facility.WIFI, Facility.OUTLET)),
-            new RoomSeed("LIB", 3, "그룹스터디룸", 10, EnumSet.of(Facility.COMPUTER, Facility.WIFI, Facility.OUTLET, Facility.AIR_CONDITIONER))
-    );
+            new RoomSeed("LIB", 3, "그룹스터디룸", 10, EnumSet.of(Facility.COMPUTER, Facility.WIFI, Facility.OUTLET, Facility.AIR_CONDITIONER)),
 
-    // 디지털관 각 거점에 10개씩 생성할 때 돌려쓸 편의시설 프리셋
-    private static final List<Set<Facility>> DIGITAL_FACILITY_PRESETS = List.of(
-            EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.OUTLET, Facility.AIR_CONDITIONER),
-            EnumSet.of(Facility.WHITEBOARD, Facility.WIFI, Facility.OUTLET),
-            EnumSet.of(Facility.ELECTRONIC_BOARD, Facility.WIFI, Facility.HDMI, Facility.SPEAKER),
-            EnumSet.of(Facility.COMPUTER, Facility.WIFI, Facility.OUTLET)
+            // 디지털관 거점1 (D1)
+            new RoomSeed("D1",  5, "522호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  5, "529호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  5, "530호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  5, "533호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  4, "423호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  4, "424호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  4, "434호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  3, "321호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  3, "323호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  3, "326호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1",  3, "327호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1", -1, "b123호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D1", -1, "b122호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+
+            // 디지털관 거점2 (D2)
+            new RoomSeed("D2",  1, "128호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D2",  1, "129호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D2",  1, "127호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER, Facility.COMPUTER)),   // 컴퓨터실
+            new RoomSeed("D2",  2, "229호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER, Facility.COMPUTER)),   // 컴퓨터실
+            new RoomSeed("D2",  2, "230호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER, Facility.COMPUTER)),   // 컴퓨터실
+            new RoomSeed("D2",  2, "231호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER, Facility.COMPUTER)),   // 컴퓨터실
+            new RoomSeed("D2",  3, "329호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D2",  4, "438호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER, Facility.COMPUTER)),   // 컴퓨터실
+            new RoomSeed("D2",  4, "440호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D2", -1, "b131호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER)),
+            new RoomSeed("D2", -1, "b132호", 30, EnumSet.of(Facility.PROJECTOR, Facility.WIFI, Facility.WHITEBOARD, Facility.AIR_CONDITIONER, Facility.SPEAKER))
     );
-    private static final List<String> DIGITAL_SPOT_CODES = List.of("D1", "D2", "D3");
-    private static final int DIGITAL_ROOMS_PER_SPOT = 10;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -122,23 +140,11 @@ public class RoomDataInitializer implements ApplicationRunner {
                     .build()));
         }
 
-        // 3) 강의실 — 기존
+        // 3) 강의실
         int roomCount = 0;
         for (RoomSeed r : ROOM_SEEDS) {
             createRoom(spots.get(r.spotCode()), r.spotCode(), r.floor(), r.roomNumber(), r.capacity(), r.facilities());
             roomCount++;
-        }
-        // 3) 강의실 — 디지털관: 거점당 10개
-        for (String code : DIGITAL_SPOT_CODES) {
-            Spot spot = spots.get(code);
-            for (int i = 1; i <= DIGITAL_ROOMS_PER_SPOT; i++) {
-                int floor = (i - 1) / 2 + 1;                       // 1~5층, 층당 2개
-                int number = floor * 100 + ((i - 1) % 2 + 1);      // 101,102,201,...
-                int capacity = 10 + (i % 5) * 6;                   // 10~34
-                Set<Facility> facilities = DIGITAL_FACILITY_PRESETS.get((i - 1) % DIGITAL_FACILITY_PRESETS.size());
-                createRoom(spot, code, floor, number + "호", capacity, facilities);
-                roomCount++;
-            }
         }
 
         log.info("[시더] 건물 {}개 / 거점 {}개 / 강의실 {}개 생성 완료",
